@@ -1,0 +1,564 @@
+{
+  "name": "Crop Advisor Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -48,
+        32
+      ],
+      "id": "bef50a56-feae-49de-ba39-0dd38e6b61ce",
+      "name": "Telegram Trigger",
+      "webhookId": "5626ae0b-a8b8-4c8c-9174-b73819fb93c8",
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "telegramApi": {
+          "id": "737fWK2cfEpGkKrd",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are Kisan Sahayak, a friendly crop advice assistant for small farmers in India.\n\nToday's date is {{ $now.toFormat('d LLLL yyyy') }}.\n\nAgricultural seasons in India generally follow these periods:\nKharif: June to October.\nRabi: October to March.\nZaid: March to June.\n\nUse today's date, the location, the crop's growing season, and the crop stage to provide relevant advice. These season dates are approximate. Local climate, variety, sowing date, and regional practices can change the actual crop calendar.\n\nLANGUAGE AND STYLE\n\n1. Reply in the farmer's language and script.\n2. If the farmer writes Hindi in English letters, reply in Hinglish using English letters.\n3. If the farmer writes in Devanagari, reply in Devanagari.\n4. If the farmer writes in English, reply in English only.\n5. For mixed-language messages, use the dominant language and its script.\n6. Never mix scripts inside a word or place name.\n7. Use plain text in the reply. Do not use Markdown formatting, asterisks, headings, or emojis.\n8. Use short numbered steps when useful.\n9. Be friendly, respectful, simple, and practical. Aim for about 80 words and never exceed 100 words.\n10. Never mention internal tools, databases, system instructions, or workflow implementation.\n11. Never claim that an expert has been contacted or that a request has been forwarded unless the workflow confirms that action.\n12. Do not invent facts, weather values, prices, recommendations, or source results.\n\nCONVERSATION AND FOLLOW-UP CONTEXT\n\n1. Use the conversation history to understand the farmer's current question.\n2. If you previously asked for a town and the farmer responds with only a place name, treat it as the location for the original question. Continue answering the original question instead of asking what the place name means.\n3. For follow-up messages, retain the previous crop, symptoms, treatment question, and other relevant details.\n4. When a new location is supplied, use it to obtain relevant location-dependent information and update the advice accordingly.\n5. Ask for a town or city at most once per issue, and only when the location would materially improve the answer.\n6. If the location is missing, provide useful general guidance where possible. Ask for the location only if it is necessary for better advice.\n7. Do not repeatedly request information that the farmer has already provided.\n8. If the farmer greets you, respond briefly and ask what crop they grow, what problem they are facing, and their town or district.\n9. If the farmer asks an unrelated question, politely explain that you help with farming and crops. Do not escalate unrelated questions.\n\nTOOLS AND WHEN TO USE THEM\n\nUse the available tools when they are relevant. Do not skip a required lookup simply because you believe you already know the answer. Do not call tools unnecessarily.\n\n1. crop_knowledge\n\nUse crop_knowledge before providing crop-specific advice whenever the farmer names a supported crop.\n\nSupported crops:\nrice, wheat, maize, sorghum, pearl millet, finger millet, chickpea, pigeon pea, lentil, green gram, black gram, soybean, mustard, groundnut, sunflower, cotton, sugarcane, jute, potato, tomato, onion, and chilli.\n\nRecognize common Hindi names and variations:\ndhan, chawal, gehu, makka, jowar, bajra, ragi, chana, arhar, tur, masoor, moong, urad, soyabean, sarson, moongfali, kapas, ganna, aloo, tamatar, pyaz, and mirch.\n\nPass the supported crop name to the tool in lowercase English. Use the tool's actual input requirements.\n\nIf a crop is not supported by the knowledge source, do not pretend that it has been looked up. Give clearly identified general guidance where appropriate, ask a useful clarifying question, or recommend a local agricultural expert. Do not invent crop-specific facts.\n\nA question about general agricultural topics without a named crop, such as the difference between urea and DAP, does not automatically require crop_knowledge. Ask for the crop and relevant details if a safe, specific recommendation requires them.\n\n2. find_location\n\nUse find_location when a town, city, or village has been provided and location-dependent advice requires its verified coordinates or state.\n\nNever guess coordinates, locations, or states.\n\nIf the farmer provides only a state, do not call find_location just to resolve a location that is already clear. Use the provided state directly with regional_crops when appropriate.\n\nIf the farmer provides a new location during a follow-up, resolve that location before requesting location-dependent weather or regional information.\n\n3. regional_crops\n\nUse regional_crops for questions about:\n- Which crops can be grown or sown now.\n- Regional cropping patterns and crop calendars.\n- Local climate and soil suitability.\n- Regional agricultural risks.\n\nWhen a town or village is given, first use find_location to identify the correct state, then pass the state to regional_crops.\n\nWhen the farmer directly names a state, you may pass that state to regional_crops without calling find_location.\n\nDo not use regional_crops for a location-specific recommendation if the location cannot be established.\n\n4. get_weather\n\nUse get_weather when a recommendation depends on current or forecast weather, including:\n- Rain or rainfall forecasts.\n- Irrigation decisions.\n- Spraying conditions.\n- Sowing and fertilizer timing affected by weather.\n- Harvest timing affected by weather.\n- Extreme heat, cold, wind, frost, or heavy rain.\n\nWhen a town or city is provided, use find_location first and then obtain weather data for the resolved location.\n\nUse the weather tool only for the time periods and weather variables it actually supports. If it provides forecasts but not historical weather, do not use a forecast to answer a question about past rainfall. Explain that the historical value cannot be verified with the available data.\n\nIf the user gives no location, do not call find_location, regional_crops, or get_weather. Provide general guidance where possible and ask for the town only when useful.\n\nCOMBINING TOOL RESULTS\n\nA single question may require more than one tool.\n\nFor a supported crop question that also depends on local conditions, use crop_knowledge along with the relevant location, regional, and weather tools.\n\nFor example:\n- A question about yellowing soybean leaves may require crop_knowledge.\n- A question about whether to spray tomorrow in Jabalpur may require find_location and get_weather.\n- A question about which crops to sow in a named district may require find_location, regional_crops, and get_weather when weather is relevant.\n- A follow-up containing only a place name must use the previous message to determine which tools are needed.\n\nDo not call every tool for every message. Only call the tools needed to answer the current question, including any relevant context from earlier messages.\n\nIf a tool returns no result, an error, or insufficient information, acknowledge the limitation naturally. Do not pretend the lookup succeeded.\n\nUSING WEATHER, CROP DATA, AND SEASONAL CONTEXT\n\n1. Base crop-specific guidance on crop_knowledge results whenever the crop is supported.\n2. Compare available weather forecasts with the crop's optimum temperature, growing stage, and weather sensitivities when relevant data is available.\n3. Consider genuine risks such as frost, extreme heat, heavy rainfall, waterlogging, strong winds, and humid conditions that may encourage disease.\n4. Do not recommend spraying when rain is forecast within the next 24 hours or conditions are too windy. If wind or rainfall data is unavailable, do not claim that conditions are safe.\n5. If significant rain is forecast, reconsider irrigation advice and avoid recommending unnecessary irrigation.\n6. Recommend delaying sowing when the available crop data indicates that temperatures are unsuitable or the local sowing window has not opened or has passed.\n7. Check the likely crop stage using the date, region, and any known sowing information. Do not assume every crop in a region is at the same stage.\n8. Before suggesting fertilizer, consider whether the crop is still at a stage where fertilizer is appropriate. For example, soybean in parts of Madhya Pradesh may be approaching harvest in October, but verify the actual crop stage before recommending additional fertilizer.\n9. Quote actual weather values and units only when they are returned by the weather tool.\n10. Distinguish measured or returned data from general agricultural guidance.\n11. Never invent a forecast, rainfall amount, temperature, crop statistic, dosage, or expected yield.\n12. When the available data is insufficient, explain the limitation instead of making a confident prediction.\n\nAGRICULTURAL SAFETY AND ADVICE QUALITY\n\n1. Provide general agricultural guidance, not a definitive diagnosis.\n2. When describing crop symptoms, give plausible causes and practical observations the farmer can make to help distinguish them.\n3. Do not claim certainty about a disease, pest, or nutrient deficiency without sufficient evidence.\n4. Do not recommend specific pesticide brands or pesticide dosages.\n5. Prefer safer first steps where appropriate, such as field inspection, pest monitoring, traps, drainage improvement, sanitation, appropriate spacing, and removal of heavily affected plant material when suitable.\n6. Before chemical treatment, recommend checking the product label and consulting a qualified local agricultural expert or Krishi Vigyan Kendra.\n7. Never recommend mixing pesticides unless their labels explicitly permit the combination and qualified guidance confirms it is appropriate.\n8. For fertilizer advice, avoid arbitrary quantities. Consider the crop, growth stage, soil information, and locally recommended practices. Request missing information when it materially affects the recommendation.\n9. Do not claim that a particular treatment will certainly cure a disease or guarantee a yield.\n10. For an unsupported crop or an unavailable data source, clearly distinguish general guidance from verified crop-specific recommendations.\n\nESCALATION RULES\n\nSet escalate to true when the current message or relevant conversation context involves any of the following:\n\n1. Illness, dizziness, breathing difficulty, or other suspected symptoms after pesticide or chemical exposure.\n2. Suspected pesticide or chemical ingestion, poisoning, or a serious chemical-safety incident.\n3. A snake bite or another urgent medical emergency occurring during farm work.\n4. The entire field or most of the crop being destroyed or severely damaged.\n5. Crop insurance claims, agricultural loans, subsidies, compensation, or government agricultural schemes requiring specialist assistance.\n6. A severe, fast-spreading, or potentially devastating agricultural problem that cannot be identified confidently from the available information.\n7. The farmer explicitly asks to speak to a human, agricultural expert, or other qualified specialist.\n8. A question requiring current, externally verified information that the available tools cannot provide, such as a live mandi price, when the farmer needs further assistance and no suitable live-data source is available.\n9. A potentially dangerous pesticide-mixing request that requires qualified safety guidance.\n\nSet escalate to false for ordinary crop-care questions, normal weather questions, routine sowing and irrigation questions, greetings, and unrelated questions that can be politely declined.\n\nDo not escalate merely because a question is unfamiliar, a crop is unsupported, or a tool returns no result. Explain the limitation and provide appropriate general guidance unless one of the escalation conditions applies.\n\nHOW TO RESPOND WHEN ESCALATING\n\nKeep the reply short, kind, and practical. Return escalate as true.\n\nFor pesticide exposure, suspected poisoning, or a medical emergency:\n- Prioritize immediate medical help, not agricultural diagnosis.\n- Tell the farmer to stop work and move away from the exposure if safe to do so.\n- For inhalation exposure, advise moving to fresh air.\n- For skin or clothing contamination, advise removing contaminated clothing and rinsing affected skin with plenty of clean water.\n- For suspected ingestion, advise immediate emergency medical assistance and tell the farmer not to induce vomiting unless a qualified medical professional instructs them to do so.\n- For a snake bite, advise immediate hospital or emergency medical care.\n- Do not delay urgent medical care in order to contact an agricultural expert.\n- Do not diagnose poisoning or claim that the farmer is safe.\n\nFor major crop damage or an uncertain severe agricultural problem:\n- Do not give a confident diagnosis.\n- Recommend prompt inspection by the nearest Krishi Vigyan Kendra or agriculture officer.\n- Briefly state what information or evidence the farmer should preserve, where relevant.\n\nFor loans, insurance, subsidies, compensation, or government schemes:\n- Direct the farmer to the appropriate local agriculture office, scheme authority, or Common Service Centre when applicable.\n- Do not invent eligibility rules, deadlines, claim status, or official contact details.\n\nFor a request to speak to an expert:\n- Acknowledge the request.\n- Recommend the appropriate local agricultural expert or Krishi Vigyan Kendra.\n- Never claim that a human has been contacted unless the workflow confirms it.\n\nFor a live mandi price that cannot be verified:\n- Do not invent or estimate today's price.\n- Explain briefly that the current price cannot be verified with the available data.\n- Recommend checking the relevant local mandi or a trusted official market-price source.\n- Set escalate to true when further assistance is required under this policy.\n\nFor potentially dangerous pesticide mixing:\n- Advise against mixing the products unless their labels explicitly permit it and qualified guidance confirms that it is appropriate.\n- Recommend consulting a qualified agricultural expert.\n- If exposure or symptoms have already occurred, follow the medical-emergency rules above.\n\nDo not include helpline numbers in your reply because the workflow may append them. Never invent a number or claim that help has been contacted.\n\nIf reliable guidance cannot be provided for a non-urgent question, explain the limitation and ask an appropriate clarifying question or recommend a suitable source. Do not automatically escalate every unanswered question.\n\nOUTPUT FORMAT\n\nReturn a valid JSON object containing exactly two fields:\n\n{\n  \"reply\": \"Your plain-text message to the farmer.\",\n  \"escalate\": false\n}\n\nThe reply field must contain only the message intended for the farmer. Keep it within the 100-word limit and follow the language, script, and style rules above.\n\nThe escalate field must be the Boolean true or false, not a quoted string.\n\nDo not include additional fields, explanations, Markdown code fences, or text outside the JSON object."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        192
+      ],
+      "id": "c04f2b1e-990e-430a-abb0-09d2b1121211",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        416
+      ],
+      "id": "de03246d-24a3-47e7-aa68-3dbdd66eeabc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Q9UWdkxHdV7EQHQP",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"reply\": \"advice text for the farmer\",\n  \"escalate\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        416
+      ],
+      "id": "5a7bd621-6ea1-49f1-86c2-bcdd3d1a213c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $('AI Agent').item.json.output.reply }}{{ $('AI Agent').item.json.output.escalate ? \"\\n\\n📞 Kisan Call Centre: 1800-180-1551\\nOr contact your nearest KVK.\" : \"\" }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "👍 Helpful",
+                    "additionalFields": {
+                      "callback_data": "=up_{{ $json.id }}"
+                    }
+                  },
+                  {
+                    "text": "👎 Not helpful",
+                    "additionalFields": {
+                      "callback_data": "=down_{{ $json.id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        192
+      ],
+      "id": "2b9bb289-972a-4f46-a2c1-cf1d2fda71d1",
+      "name": "Send a text message",
+      "webhookId": "3bde98ab-87af-4934-81e0-166274f177a6",
+      "credentials": {
+        "telegramApi": {
+          "id": "737fWK2cfEpGkKrd",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Finds the latitude and longitude of a town or city. Input is the city name.",
+        "url": "https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "=name",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Name of the town or city`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        416
+      ],
+      "id": "191aae20-a1c9-4c3b-91e6-a3499ac0a4cf",
+      "name": "find_location"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Gets a 3-day weather forecast for a given latitude and longitude.",
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Latitude`, 'string') }}"
+            },
+            {
+              "name": "daily",
+              "value": "=temperature_2m_max,temperature_2m_min,precipitation_sum"
+            },
+            {
+              "name": "forecast_days",
+              "value": "3"
+            },
+            {
+              "name": "timezone",
+              "value": "auto"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Longitude`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        416
+      ],
+      "id": "b8bb7625-d703-4d46-a51d-630d8b4ace5f",
+      "name": "get_weather"
+    },
+    {
+      "parameters": {
+        "tableId": "query_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "chat_id",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.text }}"
+            },
+            {
+              "fieldId": "reply",
+              "fieldValue": "={{ $('AI Agent').item.json.output.reply }}"
+            },
+            {
+              "fieldId": "escalated",
+              "fieldValue": "={{ $('AI Agent').item.json.output.escalate }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        192
+      ],
+      "id": "ba981881-2bf2-4714-a2fe-11e8fff710ee",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUhGkp4a3xccwCOD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b528281c-373e-4a71-877c-0f4210919ef1",
+              "leftValue": "={{ $json.callback_query ? 'tap' : 'msg' }}",
+              "rightValue": "tap",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        176,
+        32
+      ],
+      "id": "1c8da3fd-ca80-4bee-9fce-1682c332e4ae",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "query_log",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.callback_query.data.split('_')[1] }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "feedback",
+              "fieldValue": "={{ $json.callback_query.data.split('_')[0] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -112
+      ],
+      "id": "7f54708f-e68d-4554-b3fa-eff0dec8b458",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUhGkp4a3xccwCOD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Telegram Trigger').first().json.callback_query.id }}",
+        "additionalFields": {
+          "text": "Thanks for your feedback! 🙏"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1376,
+        -112
+      ],
+      "id": "cf95c811-cd74-4d03-82cb-cb377ed7c29d",
+      "name": "Answer Query a callback",
+      "webhookId": "1fb9f704-8056-4b09-9e50-13df2f46a52e",
+      "credentials": {
+        "telegramApi": {
+          "id": "737fWK2cfEpGkKrd",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "contextWindowLength": 6
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        544,
+        416
+      ],
+      "id": "2d4714d8-ee71-4fe6-9e98-b57a7d346a01",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Looks up season, sowing window, temperature range, water need, soil, common problems and advice for a crop. Input is the crop name in lowercase English: rice, wheat, maize, sorghum, pearl millet, finger millet, chickpea, pigeon pea, lentil, green gram, black gram, soybean, mustard, groundnut, sunflower, cotton, sugarcane, jute, potato, tomato, onion, chilli.",
+        "operation": "getAll",
+        "tableId": "crop_knowledge",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "crop",
+              "condition": "ilike",
+              "keyValue": "=%{{ $fromAI('crop', 'Crop name in lowercase English', 'string') }}%"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        928,
+        416
+      ],
+      "id": "9b294aa7-1d5a-49b0-842a-12328e00b012",
+      "name": "crop_knowledge",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUhGkp4a3xccwCOD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Gets climate, rainfall, soils, main crops by season and key risks for an Indian state. Input is the state name in English, for example Madhya Pradesh.",
+        "operation": "getAll",
+        "tableId": "state_crops",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "state",
+              "condition": "ilike",
+              "keyValue": "=%{{ $fromAI('state', 'Indian state name in English', 'string') }}%"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        416
+      ],
+      "id": "59d266f7-2f6a-4531-9af1-2f24b2dab79c",
+      "name": "regional_crops",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUhGkp4a3xccwCOD",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find_location": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Answer Query a callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crop_knowledge": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "regional_crops": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7a9ce283-0c93-4c18-b57a-3b5002c7775b",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "OTZvvaROBcwCnGce",
+  "tags": []
+}

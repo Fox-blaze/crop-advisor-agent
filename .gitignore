@@ -1,0 +1,6 @@
+# Never commit secrets or personal data
+.env
+*.key
+*.pem
+credentials*.json
+query_log_export*.csv
