@@ -71,7 +71,7 @@ An automated n8n test workflow sent 18 test messages (crop advice, weather, esca
 |---|---|
 | Run 1, basic checks | 100% |
 | Run 1 re-scored with stricter criteria (wrong script or language, unnecessary tool calls, glitches) | 39% |
-| Final run after prompt fixes | 90% |
+| Final run after prompt fixes | 80% |
 
 Replies in the tests took about 15 to 35 seconds. These are prototype test results, not measures of impact on farmers.
 
