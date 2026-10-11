@@ -4,8 +4,8 @@
 
 Built for the IBM-AICTE AI internship (Agentic AI project) · Supports **UN SDG 2: Zero Hunger** (targets 2.3 and 2.4)
 
-**Try the bot:** https://t.me/[bot_username]
-**Built by:** [Your name] · [College / Team]
+**Try the bot:** https://t.me/kisan_sahayak_demo_bot
+**Built by:** Tarsh Jain
 
 ---
 
