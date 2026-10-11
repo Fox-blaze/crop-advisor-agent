@@ -72,7 +72,7 @@ In total, 172 tests were run: the 18-message set four times and a 50-question se
 |---|---|
 | Run 1, basic checks | 100% |
 | Run 1 re-scored with stricter criteria (wrong script or language, unnecessary tool calls, glitches) | 39% |
-| Earlier 50-question run | 72% |
+| Earlier 50-question run | 76% |
 | Final run after prompt fixes | 80% |
 
 Replies in the tests took about 15 to 35 seconds. These are prototype test results, not measures of impact on farmers.
