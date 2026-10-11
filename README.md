@@ -66,11 +66,13 @@ Never commit tokens or keys. Keep them in n8n credentials only.
 ## Testing
 
 An automated n8n test workflow sent 18 test messages (crop advice, weather, escalation, off-topic and memory) to a copy of the agent and checked the results.
+In total, 172 tests were run: the 18-message set four times and a 50-question set twice.
 
 | Run | Result |
 |---|---|
 | Run 1, basic checks | 100% |
 | Run 1 re-scored with stricter criteria (wrong script or language, unnecessary tool calls, glitches) | 39% |
+Earlier 50-question run |
 | Final run after prompt fixes | 80% |
 
 Replies in the tests took about 15 to 35 seconds. These are prototype test results, not measures of impact on farmers.
